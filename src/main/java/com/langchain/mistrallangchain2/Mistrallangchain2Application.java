@@ -1,6 +1,9 @@
 package com.langchain.mistrallangchain2;
 
 import org.springframework.ai.transformer.splitter.TextSplitter;
+//import org.springframework.beans.factory.annotation.Value;
+//import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -76,7 +79,9 @@ import static java.util.stream.Collectors.joining;
 	    //AzureOpenAiAutoConfiguration.class
 	} , scanBasePackages = "com.langchain.mistrallangchain2")
 public class Mistrallangchain2Application {
-
+	
+	static private String documentPath;
+	static private int rollNo;
 	
 
 	
@@ -84,6 +89,9 @@ public class Mistrallangchain2Application {
 		SpringApplication.run(Mistrallangchain2Application.class, args);
 		
 		System.out.println("MISTRALLANGCHAIN2-MAIN1");
+		System.out.println(documentPath);
+		System.out.println(rollNo);
+		
 		
 		
 		//Ces quelques lignes sont tirées d'un autre exemple.
@@ -100,11 +108,15 @@ public class Mistrallangchain2Application {
         // We will use a history about origin of the Llama by National Geographic https://www.nationalgeographic.es/animales/llama.
         //Document document = loadDocument(toPath("Documents/story-about-origin-of-the-llama.txt"), new TextDocumentParser());
         Document document = FileSystemDocumentLoader.loadDocument("/home/broaduser/Documents/story-about-origin-of-the-llama.txt");
+        
+        // Utiliser un chemin relatif ou configurable
+        
 
         // In a RAG system, it is crucial to split the document into smaller chunks so that it's more effective
         // to identify and retrieve the most relevant information in the retrieval process later
         DocumentSplitter splitter = DocumentSplitters.recursive(200, 0);
         List<TextSegment> segments = splitter.split(document);
+        //List<TextSegment> segments = splitter.split(documentPath);
         
         
         // Now, for each text segment, we need to create text embeddings, which are numeric representations of the text in the vector space.
@@ -165,7 +177,8 @@ public class Mistrallangchain2Application {
         // Now we can use the Mistral AI chat model to generate the answer to the user question based on the context information.
         ChatModel chatModel = MistralAiChatModel.builder()
                 .apiKey(System.getenv("MISTRAL_AI_API_KEY"))
-                .modelName(MISTRAL_MEDIUM_LATEST)
+                //.modelName(MISTRAL_MEDIUM_LATEST)
+                .modelName("mistral-tiny")
                 .temperature(0.2) // expect a more focused and deterministic answer
                 .logRequests(true)
                 .logResponses(true)
@@ -173,12 +186,12 @@ public class Mistrallangchain2Application {
         
         System.out.println("MISTRALLANGCHAIN2-MAIN7");
 
-        //AiMessage aiMessage = chatModel.chat(prompt.toUserMessage()).aiMessage();
+        AiMessage aiMessage = chatModel.chat(prompt.toUserMessage()).aiMessage();
         
         System.out.println("MISTRALLANGCHAIN2-MAIN8");
         
-        //String answer = aiMessage.text();
-        //System.out.println(answer); // According to Inca legend, the llamas were created by the mythical founders of the Inca Empire....
+        String answer = aiMessage.text();
+        System.out.println(answer); // According to Inca legend, the llamas were created by the mythical founders of the Inca Empire....
     }
 	
 	
@@ -191,6 +204,21 @@ public class Mistrallangchain2Application {
             throw new RuntimeException(e);
         }
     }
+	
+	//J'ai pas réussi à le faire marcher avec un nom de fichier
+	@Value("${story}")
+	// Setter
+	public void setDocumentPath(String documentPath)
+	{
+		this.documentPath = documentPath;
+	}
+	
+	@Value("101")
+	// Setter
+	public void setRollNo(int rollNo)
+	{
+		this.rollNo = rollNo;
+	}
 
 	
 }
